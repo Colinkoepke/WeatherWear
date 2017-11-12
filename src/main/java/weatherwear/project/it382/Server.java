@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import tk.plogitech.darksky.forecast.APIKey;
 import tk.plogitech.darksky.forecast.DarkSkyClient;
@@ -58,11 +60,13 @@ class Server{
       //'\n\' tells the client its done receiving data
       //messageToClient = "PERSON OBJECT";
       //outToClient.writeBytes(messageToClient);
-      outToClient.writeBytes(Server.getSummary());
-      
+      ArrayList<String> summaryList = Server.getSummary();
+      for(int i = 0; i < summaryList.size(); i++){
+          System.out.println(summaryList.get(i));
+          outToClient.writeBytes(summaryList.get(i));
+      }
       
       //Close and flush the server socket so we do not get a socket exception
-      System.out.println("Colin Im closing server cause idk if we need it open or closed");
       outToClient.flush();
       outToClient.close();
       inFromClient.close();
@@ -73,7 +77,9 @@ class Server{
    
   }
   
-  private static String getSummary() throws ForecastException{
+  private static ArrayList<String> getSummary() throws ForecastException{
+      
+    ArrayList<String> summaryList = new ArrayList<>();
       
       ForecastRequest request = new ForecastRequestBuilder()
         .key(new APIKey("74fd1ea1853ba1568046485397a24395"))
@@ -82,7 +88,7 @@ class Server{
         .units(ForecastRequestBuilder.Units.us)
         .exclude(ForecastRequestBuilder.Block.minutely)
         .extendHourly()
-        .location(new GeoCoordinates(new Longitude(13.377704), new Latitude(52.516275))).build();
+        .location(new GeoCoordinates(new Longitude(13.377704), new Latitude(52.516675))).build();
 
     DarkSkyClient client = new DarkSkyClient();
     
@@ -92,12 +98,33 @@ class Server{
     
     JSONObject obj = new JSONObject(forecast);
     String n = obj.getString("timezone");
-    System.out.println("--------");
     System.out.println(n);
-    System.out.println("--------");
+    summaryList.add(n + '\n');
+    
+    
+    System.out.println(obj.getJSONObject("currently").getInt("time"));
+    summaryList.add(Integer.toString(obj.getJSONObject("currently").getInt("time")) + "\n");
+    System.out.println(obj.getJSONObject("currently").getString("summary"));
+    summaryList.add(obj.getJSONObject("currently").getString("summary") + '\n');
+    System.out.println(obj.getJSONObject("currently").getDouble("precipProbability"));
+    summaryList.add(Double.toString(obj.getJSONObject("currently").getDouble("precipProbability")) + '\n');
+    //System.out.println(obj.getJSONObject("currently").getString("precipType"));
+    //summaryList.add(obj.getJSONObject("currently").getString("precipType") + '\n');
+    System.out.println(obj.getJSONObject("currently").getDouble("temperature"));
+    summaryList.add(Double.toString(obj.getJSONObject("currently").getDouble("temperature")) + '\n');
+    System.out.println(obj.getJSONObject("currently").getDouble("apparentTemperature"));
+    summaryList.add(Double.toString(obj.getJSONObject("currently").getDouble("apparentTemperature")) + '\n');
+    System.out.println(obj.getJSONObject("currently").getDouble("humidity"));
+    summaryList.add(Double.toString(obj.getJSONObject("currently").getDouble("humidity")) + '\n');
+    System.out.println(obj.getJSONObject("currently").getDouble("windSpeed"));
+    summaryList.add(Double.toString(obj.getJSONObject("currently").getDouble("windSpeed")) + '\n');
+    System.out.println(obj.getJSONObject("currently").getDouble("cloudCover"));
+    summaryList.add(Double.toString(obj.getJSONObject("currently").getDouble("cloudCover")) + '\n');
+    System.out.println(obj.getJSONObject("currently").getInt("uvIndex"));
+    summaryList.add(Double.toString(obj.getJSONObject("currently").getInt("uvIndex")) + '\n');
     
     //how to parse JSOn http://theoryapp.com/parse-json-in-java/
     //API library https://github.com/200Puls/darksky-forecast-api
-    return n;
+    return summaryList;
   }
 }

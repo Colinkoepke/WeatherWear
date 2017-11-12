@@ -1,7 +1,12 @@
-package weatherwear.project.it382;
+//package weatherwear.project.it382;
 
 import java.io.*;
 import java.net.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 //tcp client
 class Client{
@@ -12,6 +17,7 @@ class Client{
     String state;
     String city;
     String hostMessage;
+    List<String> apiMessages = new ArrayList<>();
     
     //Getting the server host name and port number to send a connection request too 
     String serverHostName = argv[0];
@@ -43,14 +49,51 @@ class Client{
     System.out.println("Message sent to server.... waiting for response");
     
     //Takes characters from server and get placed to string hostMessage 
-    hostMessage = inFromServer.readLine();
-    System.out.println("FROM SERVER: " + hostMessage);
+    while((hostMessage = inFromServer.readLine()) != null){
+        System.out.println("FROM SERVER: " + hostMessage);
+        apiMessages.add(hostMessage);
+    }
     
+    for(int i = 0; i < apiMessages.size(); i++)
+        System.out.println(apiMessages.get(i));
+    
+    System.out.println("Weather Summary:");
+    System.out.println("-----------------");
+    System.out.println("Current Timezone: " + apiMessages.get(0));
+    System.out.println("Summary: " + apiMessages.get(2));
+    System.out.println("Temperature: " + apiMessages.get(5));
+    System.out.println("Feels like: " + apiMessages.get(6));
+
     //Closing the client socket
     System.out.println("Closing Client Connection");
     outToServer.close();
     inFromServer.close();
     clientSocket.close();
+    
+    try{
+    clientSocket = new Socket(serverHostName, 12346);
+    DataOutputStream outToServer2 = new DataOutputStream(clientSocket.getOutputStream());
+    BufferedReader inFromServer2 = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+    
+    for(int i = 0; i < apiMessages.size(); i++){
+        outToServer2.writeBytes(apiMessages.get(i) + '\n');
+        System.out.println(apiMessages.get(i));
+        outToServer2.flush();
+    }
+
+    System.out.println(inFromServer2.readLine());
+    }catch(Exception e){
+        System.err.println("Error connecting to second server");
+        
+    }finally{
+	  if(clientSocket != null){
+	    try{
+	      clientSocket.close();
+	    }catch(IOException ex){
+	      System.err.println("Cannot close second server");
+	    }
+	  }
+	}
   }
 
 }
