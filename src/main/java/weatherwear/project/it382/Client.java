@@ -17,7 +17,10 @@ class Client{
     String state;
     String city;
     String hostMessage;
+    String hostMessage2;
     List<String> apiMessages = new ArrayList<>();
+    List<String> serverMessages = new ArrayList<>();
+    
     
     //Getting the server host name and port number to send a connection request too 
     String serverHostName = argv[0];
@@ -54,46 +57,47 @@ class Client{
         apiMessages.add(hostMessage);
     }
     
-    for(int i = 0; i < apiMessages.size(); i++)
-        System.out.println(apiMessages.get(i));
-    
     System.out.println("Weather Summary:");
     System.out.println("-----------------");
-    System.out.println("Current Timezone: " + apiMessages.get(0));
     System.out.println("Summary: " + apiMessages.get(2));
-    System.out.println("Temperature: " + apiMessages.get(5));
-    System.out.println("Feels like: " + apiMessages.get(6));
-
+    System.out.println("Percip Prob: " + apiMessages.get(3));
+    System.out.println("Temperature: " + apiMessages.get(4));
+    System.out.println("Apparant Temperature: " + apiMessages.get(5));
+    System.out.println("Humidity: " + apiMessages.get(6));
+    System.out.println("Windspeed: " + apiMessages.get(7));
+    System.out.println("Cloud Coverage: " + apiMessages.get(8));
+    System.out.println("UV Index: " + apiMessages.get(9));
+    System.out.println("-----------------");
+    
     //Closing the client socket
     System.out.println("Closing Client Connection");
+    outToServer.flush();
     outToServer.close();
     inFromServer.close();
     clientSocket.close();
     
-    try{
-    clientSocket = new Socket(serverHostName, 12346);
-    DataOutputStream outToServer2 = new DataOutputStream(clientSocket.getOutputStream());
-    BufferedReader inFromServer2 = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
     
+    Socket clientSocket2 = new Socket(serverHostName, 12166);
+    DataOutputStream outToServer2 = new DataOutputStream(clientSocket2.getOutputStream());
+    BufferedReader inFromServer2 = new BufferedReader(new InputStreamReader(clientSocket2.getInputStream()));
+      
     for(int i = 0; i < apiMessages.size(); i++){
-        outToServer2.writeBytes(apiMessages.get(i) + '\n');
-        System.out.println(apiMessages.get(i));
-        outToServer2.flush();
-    }
-
-    System.out.println(inFromServer2.readLine());
-    }catch(Exception e){
-        System.err.println("Error connecting to second server");
-        
-    }finally{
-	  if(clientSocket != null){
-	    try{
-	      clientSocket.close();
-	    }catch(IOException ex){
-	      System.err.println("Cannot close second server");
-	    }
-	  }
-	}
+	outToServer2.writeBytes(apiMessages.get(i)+ '\n');
+	System.out.println(apiMessages.get(i));
+	outToServer2.flush();
+     }
+     
+     System.out.println("Message sent to server.... waiting for response");
+      
+      while((hostMessage2 = inFromServer2.readLine()) != null){
+	 System.out.println("FROM SERVER: " + hostMessage2);
+	 serverMessages.add(hostMessage2); 
+      }
+      System.out.println("Closing Client Connection");
+      outToServer2.flush();
+      outToServer2.close();
+      inFromServer2.close();
+      clientSocket2.close();
+      
   }
-
 }
